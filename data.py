@@ -5,6 +5,7 @@ from qiskit import QuantumCircuit
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 from qiskit_machine_learning.algorithms.classifiers import QSVC
 from qiskit_machine_learning.state_fidelities import ComputeUncompute
 from qiskit.primitives import StatevectorSampler
@@ -20,8 +21,10 @@ def calculate_rsi(prices, window=14):
     rs = gain / loss
     return 100 - (100 / (1 + rs))
 
-
-db = pd.read_csv('C:/Users/bmuir/QSVM-Stock-Price-Predictor/stocks/A.csv', parse_dates=['Date'])
+#Relative file path to the CSV file
+base_dir = os.path.dirname(__file__)
+csv_path = os.path.join(base_dir, 'stocks', 'A.csv')
+db = pd.read_csv(csv_path, parse_dates=['Date'])
 
 #create features for previous close and volume
 db['Prev_Close'] = db['Close'].shift(1)
