@@ -28,11 +28,12 @@
 
 \subsection*{Data and Processing}
 \subsubsection*{Dataset and Pre-treating}
-The dataset we use in this project originated from Kaggle [1]. The dataset provided us with seven different metrics to base our features upon. These metrics included: opening price, closing price, high, low, adjusted-closing price, and volume. The dataset is quite large, as it includes all stock tickers currently trading on the NASDAQ, therefore we picked out some example stock tickers to use (Nvidia, Acilent, Microsoft) as well as the stock tickers used in the study we are comparing with (Honeywell, Visa, Apple, Johnson and Johnson). The mix of stock tickers allows for the QSVM to train on multiple different types of stocks. In order for the QSVM to properly learn from the data it must be pre-treated to ensure numerical stability and decrease the risk of noise. This project used the same method of Min-Max normalization with a scale from 0 to 1, as done in this study [2]. 
+The dataset we use in this project originated from Kaggle [3]. The dataset provided us with seven different metrics to base our features upon. These metrics included: opening price, closing price, high, low, adjusted-closing price, and volume. The dataset is quite large, as it includes all stock tickers currently trading on the NASDAQ, therefore we picked out some example stock tickers to use (Nvidia, Acilent, Microsoft) as well as the stock tickers used in the study we are comparing with (Honeywell, Visa, Apple, Johnson and Johnson). The mix of stock tickers allows for the QSVM to train on multiple different types of stocks. In order for the QSVM to properly learn from the data it must be pre-treated to ensure numerical stability and decrease the risk of noise. This project used the same method of Min-Max normalization with a scale from 0 to 1, as done in this study [2]. 
 \subsubsection*{Stock Indicators}
 Certain stock indicators were replicated from the study to ensure we are consistent with our comparisons and to determine optimal predictions, these include the Moving Average Convergence Divergence (MACD), Estimated Moving Average (EMA-12 and 26), Average True Range (ATR), and Relative Strength Index (RSI). Two simplistic indicators were also calculated based on the technical indicators of the tickers, Price-Volume Ratio and Momentum. These indicators were calculated within the software by using builtin functions (such as for EMA), helper functions (such as for ATR and RSI), or by calculating the indicator using the formula and the values within the dataset (such as for Momentum or Previous Close).   
 \subsection*{Feature Selection}
-The paper that our project is based upon utilizes a Quantum Annealing algorithm to develop feature selection as well as dimensionality reduction prior to the training and predictions [3]. Initially we planned to have a Quantum Annealing algorithm using a Quadratic unconstrained binary computation (QUBO), this algorithm would be able to calculate the optimal features to be selected for the QSVM. However the algorithm's selection did not result in high enough metrics to be determined as useful. The decision was made to select the features manually by testing different combinations of both raw input data from the dataset and calculated stock indicators which are present in the study [3]. \\ \\ Prior to any implementation of the QSVM, common stock metrics for the dataset were created to better develop plans towards an optimal feature selection process. The volatility of a stock is an extremely important factor for determining the optimal feature to be selected. We can see in figure 1 that the stock involved in the tech industry (AAPL, NVDA, MSFT) have higher volatility numbers, which means these stocks could be predicted much easier from features based on momentum and volatility. On the other hand, the ATR demonstrates that the highest volatility stock (NVDA) is a product of its very high average stock price, which means that the volatility is expected at that high of a price. Autocorrelation determines which stocks will revert back towards the mean after any changes, and may present will more predictable trends through their history. This means that the lower the autocorrelation, the higher the mean-reverting properties, making the stock ideal for momentum based features. The larger amount of volume through the Average Daily Range and both Momentum statistics mean that any indicators involving volume may be useful to test. 
+The paper that our project is based upon utilizes a Quantum Annealing algorithm to develop feature selection as well as dimensionality reduction prior to the training and predictions [4]. Initially we planned to have a Quantum Annealing algorithm using a Quadratic unconstrained binary computation (QUBO), this algorithm would be able to calculate the optimal features to be selected for the QSVM. However the algorithm's selection did not result in high enough metrics to be determined as useful. The decision was made to select the features manually by testing different combinations of both raw input data from the dataset and calculated stock indicators which are present in the study [4]. 
+\\ \\ Prior to any implementation of the QSVM, common stock metrics for the dataset were created to better develop plans towards an optimal feature selection process. The volatility of a stock is an extremely important factor for determining the optimal feature to be selected. We can see in figure 1 that the stock involved in the tech industry (AAPL, NVDA, MSFT) have higher volatility numbers, which means these stocks could be predicted much easier from features based on momentum and volatility. On the other hand, the ATR demonstrates that the highest volatility stock (NVDA) is a product of its very high average stock price, which means that the volatility is expected at that high of a price. Autocorrelation determines which stocks will revert back towards the mean after any changes, and may present will more predictable trends through their history. This means that the lower the autocorrelation, the higher the mean-reverting properties, making the stock ideal for momentum based features. The larger amount of volume through the Average Daily Range and both Momentum statistics mean that any indicators involving volume may be useful to test. 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=1.25\textwidth]{stocktechs.png}}
@@ -46,15 +47,14 @@ The paper that our project is based upon utilizes a Quantum Annealing algorithm 
     \label{fig:2}
 \end{figure}
 \subsection*{Model Training and Prediction}
-The model is trained using Qiskit's QSVC function which is the updated version of the QSVM function that has since been deprecated. The QSVC function requires many variables to be set up prior to running. First, a feature map must be created in order to represent the data in a quantum fashion. We must encode the classical bits that represent each feature into qubits, to do this we use qiskit's ZZFeatureMap function. This function creates a second-order Pauli-Z evolution circuit (See Fig.3) which encodes each x parameter (representing the features selected) into a qubit, one study describes it as being "analogous to 'one-hot' encoding [4]. This means that we can encode any amount of features selected into the same amount of qubits, the difficulty stems from the increase in processing time and decrease of accuracy based on the amount of qubits. The solutions we determined is later discussed in the results section. 
+The model is trained using Qiskit's QSVC function which is the updated version of the QSVM function that has since been deprecated. The QSVC function requires many variables to be set up prior to running. First, a feature map must be created in order to represent the data in a quantum fashion. We must encode the classical bits that represent each feature into qubits, to do this we use qiskit's ZZFeatureMap function. This function creates a second-order Pauli-Z evolution circuit (See Fig.3) which encodes each x parameter (representing the features selected) into a qubit. This means that we can encode any amount of features selected into the same amount of qubits. The amount of qubits is directly correlated with the increase in processing time and decrease of accuracy, therefore we must be careful when navigating this issue. 
+The solutions we determined is later discussed in the results section. 
 \begin{figure}[H]
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=1.25\textwidth]{zzfeature.png}}
     \caption{ZZFeatureMap Encoding Three Qubits}
     \label{fig:3}
 \end{figure}
-
-
 \section*{Results}
 After the feature map is created a qiskit StateVectorSampler is initialized that simulates the training of the QSVC classifier, this is done instead of using a real quantum computer as the project does not incorporate a high order of qubits which would require more processing power. Using the qiskit-machine-learning library we generate a FidelityQuantumKernel which is used to map the data that has now passed through the ZZFeatureMap into a higher dimensional space. This allows for the non-linearly separable data to instead be linearly separable. When some data is unable to be separated linearly, we can add in a z-axis, and then have the potential to "slice" this data through a third dimension which then allows it to be linearly separable where previously was not possible (See Fig.4). 
 \begin{figure}[H]
@@ -69,10 +69,10 @@ Once the feature map, sampler, and quantum kernel are prepared, then the QSVC ca
 The study in which we are comparing our model tested many different models and dimensionality reduction algorithms to attempt to find the optimal combination. The highest average accuracy and f-score value they were able to achieve was 60.26\% and 62.24\% respectively. This was done with a classical machine learning model using a Quantum Annealing algorithm with 5 qubits. The highest QSVM metrics were achieved with the Principal Component Analysis algorithm and 5 qubits. This resulted in 56.58\% accuracy and 59.79\% f-score. We will be using these values as our goals to achieve. Testing was done on different hyperparameters in order to determine what would lead to the optimal prediction metrics. The interchangeable areas of the software during testing was the features, the number of repetitions of the ZZFeatureMap on the circuit, the C-value of the QSVM, and the entanglement scheme of the ZZFeatureMap.
 \\
 \\
-Out of all previously mentioned hyperparameter, only one had little effect on the end outcome. The C-value of the QSVM was only changed once throughout all testing, from 10.0 to 5.0, and optimality was found with the 5.0 C-value. Therefore we determined this parameter to be insignificant when determining optimal accuracy and f-score. For the other parameters, we had tested each at different values until we reach outcomes better than the ones found in the comparative study. To test the features and their performance, we began with a baseline test over a single feature combination, this involved combining two raw data columns (previous close and volume) directly from the dataset. This was the simplest combination that would still allow the model to learn based on the stock metrics determined prior. Starting with this combination allowed us to view the general trends of each of the other hyperparameters, and changing them will affect either the runtime or the outcome of the model. 
+Out of all previously mentioned hyperparameters, only one had little effect on the end outcome. The C-value of the QSVM was only changed once throughout all testing, from 10.0 to 5.0, and optimality was found with the 5.0 C-value. Therefore we determined this parameter to be insignificant when determining optimal accuracy and f-score. For the other parameters, we had tested each at different values until we reach outcomes better than the ones found in the comparative study. To test the features and their performance, we began with a baseline test over a single feature combination, this involved combining two raw data columns (previous close and volume) directly from the dataset. This was the simplest combination that would still allow the model to learn based on the stock metrics determined prior. Starting with this combination allowed us to view the general trends of each of the other hyperparameters, and changing them will affect either the runtime or the outcome of the model. 
 \begin{figure}[H]
     \centering
-    \makebox[\textwidth][c]{\includegraphics[width=1.5\textwidth]{baselinetest.png}}
+    \makebox[\textwidth][c]{\includegraphics[width=1.25\textwidth]{baselinetest.png}}
     \caption{Baseline tests on feature combination (Previous Close,Volume) at different sample sizes, entanglement schemes, C values, and circuit repetitions}
     \label{fig:5}
 \end{figure}
@@ -81,20 +81,86 @@ Based of the results, we determined that effect on run-time was far more signifi
 \\
 \\
 Now that the optimal hyperparemeters were determined, the most importance task of feature selection was needed to be done. This required testing multiple different possible feature combinations until we found a combination that outperformed the highest average accuracy and f-score of the study we are comparing with. There is two measures that are important for feature selection; number of features (qubits) and the type of combination. In order to achieve an outperforming prediction model we needed to find the proper amount of qubits so that the circuit was not too complex and thus result in excessive noise, as well as find the right combination of features to ensure we are covering every type of stock trend. From the metrics in figure 1 and 2 we determined that volume, momentum, volatility are all important markers for these stocks, these will be the key factors to test in order to help predict the trends optimally. 
-
-
-
+The first set of tests were done in order to correlate the highest outcomes with specific indicators, if one particular indicator was linked to multiple instances of high performance, then that indicator was determined to be ideal. 
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.25\textwidth]{firsttestlinear.png}}
+    \caption{Initial tests on correlation between featrure combinations and (f1 score, accuracy)}
+    \label{fig:6}
+\end{figure}
+\noindent
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.25\textwidth]{firsttestbars.png}}
+    \caption{Average accuracy of different feature combinations throughout all stock predictions}
+    \label{fig:7}
+\end{figure}
+\noindent
+The first tests helped determine the indicators that seemed to perform better than others. We found that feature combinations of more then 2 resulted in lower average accuracy (See figure 7),
+therefore it was optimal to pick just two features to ensure accuracy remained highest. The choices of features were based on utlizing more stock indicators instead of raw data,
+in this way we could determine which of the specific indicators has more of a presence in high performing QSVM predictions. The first tests also proved to be promising as we noticed that most feature combination choices 
+at minimum replicated withing 3-5\% of the average scores found in the paper. The highest performing feature combination of MACD and the EMA Ratio (EMA26/EMA12), was able to outperform the average 
+average accuracy and average f1-score of the highest QSVM implemented in the paper. The QSVM with Principal Component Analysis and 5 features achieved an accuracy of 56.58\% and f-score of 
+59.79\% while our implementation of the QSVM achieved an accuracy of 59.4\% and f-score of 67.5\%. 
+\\
+\\
+The difference in sectors among the stocks chosen provided the QSVM with learning data that has wildly different patterns. This was demonstrated in the testing when looking at the 
+performance of feature combinations for specific stocks. With the chosen feature combinations, a C-value of 5.0, 2 repetitions of the ZZFeatureMap, and linear entanglement, we were 
+able to produce a QSVM that outperformed the paper on every metric (except for HON f-score) for each different stock (See figure 8). These difference was much greater than the difference present in the average accuracy and f1-score 
+value. They do not hold as much weight as the total average accuracy and f1-score values do, nonetheless it is still very notable for this project. 
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.25\textwidth]{firsttesttable.png}}
+    \caption{Table demonstrating comparison of our QSVM with specific feature combinations vs. paper's QSVM model on predicting specific stocks}
+    \label{fig:8}
+\end{figure}
+\noindent
 \section*{Conclusion}
 \subsection*{Summary}
+The complexity of predicting stock prices using quantum algorithms and methods remains a challenge. The overwhelming unpredictability that 
+the stock market poesses makes such a task very difficult. The results from this project aim to give details on methods to further optimize
+the usage of QSVM's in such a binary classification problem. This project revealed the grave importance of testing different parameters in order to 
+develop further optimizations, especially related to the usage of features in the QSVM. 
 \subsection*{Relevance}
+The content of this project is particularly relevant to the course as it involves heavily with developed further optimized structure in a quantum fashion 
+to achieve a goal. The ability to transform a difficult classical issue into a easier quantum one has been the forefront of the course since it began. 
+The optimization towards stock price prediction sheds light on the both the ability that quantum computers have in binary classification, and the potential 
+for greater limits in the field. 
 \subsection*{Future Work}
-
-[1] https://www.kaggle.com/datasets/jacksoncrow/stock-market-dataset/data
-
-[2] https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=\&arnumber=10527612
-
-[3] https://arxiv.org/pdf/2308.13642
-
-[4] https://arxiv.org/pdf/2301.03715
+For this project in particular, many improvements can be made in order to develop this into higher optimality. Developement of a 
+feature selection algorithm that allows for dimensionality reduction while maintaining the mathematically most optimal features is something 
+that could be incorporated in the future. The inclusion of real quantum computers is another topic that could be developed in the future. Utilizing IBM's real quantum computer
+could have the processing capabilities to predict stock prices with many more qubits that we were able to simulate, leading to further developements towards a better model. 
+\section*{Contribution of Team Members}
+\subsection*{Code Implementation}
+A. Benjamin Muir implemented the Feature Map, main QSVM functionality, and data testing variant of Code
+\\
+\noindent
+B. Hasan Fakih implemented the stock indicator helper functions, model training and testing
+\\
+\noindent
+C. Both members worked equally on the data pre-processing/preperation of data  
+\subsection*{Report}
+A. Benjamin Muir worked on Results, Evaluation and Conclusion 
+\\
+\noindent
+B. Hasan Fakih worked on Introduction and Background Information
+\\
+C. Benjamin Muir and Hasan Fakih both jointly worked on the reasearch and finding papers relevant to the project
+\section*{References}
+[1] Alexander, A., \& Widdows, D. (2022). Quantum text encoding for classification tasks. 2022 IEEE/ACM 7th Symposium on Edge Computing (SEC), 355 – 361. https://doi.org/10.1109/sec54971.2022.00052 
+\\
+\\
+\noindent
+[2] Bhasin, N. K., Kadyan, S., Santosh, K., HP, R., Changala, R., \& Bala, B. K. (2024). Enhancing quantum machine learning algorithms for optimized financial portfolio management. 2024 Third International Conference on Intelligent Techniques in Control, Optimization and Signal Processing (INCOS), 1 – 7. https://doi.org/10.1109/incos59338.2024.10527612 
+\\
+\\
+\noindent
+[3] Onyshchak, O. (2020, April 2). Stock market dataset. \\
+Kaggle. https://www.kaggle.com/datasets/jacksoncrow/stock-market-dataset/data 
+\\
+\\
+\noindent
+[4] Srivastava, N., Belekar, G., Shahakar, N., \& Babu H., A. (2023). The potential of quantum techniques for stock price prediction. 2023 IEEE International Conference on Recent Advances in Systems Science and Engineering (RASSE), 1 – 7. https://doi.org/10.1109/rasse60029.2023.10363533 
 
 \end{document}
