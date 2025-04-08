@@ -1,0 +1,11 @@
+qiskit==1.4.2
+qiskit-aer==0.17.0
+qiskit-algorithms==0.3.1
+qiskit-machine-learning==0.8.2
+qiskit-optimization==0.6.1
+qiskit_utils==1.2.1
+scikit-learn==1.6.1
+psutil==7.0.0
+numpy==2.1.2
+matplotlib==3.9.2
+matplotlib-inline==0.1.7
